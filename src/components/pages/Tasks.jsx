@@ -8,22 +8,32 @@ export default function Tasks() {
   const [input, setInput] = useState("");
   const [filter, setFilter] = useState("All");
 
+  // Migrate existing tasks to have IDs if they don't
+  useEffect(() => {
+    const migratedTasks = tasks.map((task) =>
+      task.id ? task : { ...task, id: Date.now() + Math.random() }
+    );
+    if (migratedTasks.some((task, index) => task.id !== tasks[index].id)) {
+      setTasks(migratedTasks);
+    }
+  }, []);
+
   const addTask = () => {
     if (input.trim()) {
-      setTasks([...tasks, { text: input, completed: false }]);
+      setTasks([...tasks, { id: Date.now(), text: input, completed: false }]);
       setInput("");
     }
   };
 
-  const toggleComplete = (index) => {
-    const updated = tasks.map((t, i) =>
-      i === index ? { ...t, completed: !t.completed } : t
+  const toggleComplete = (id) => {
+    const updated = tasks.map((t) =>
+      t.id === id ? { ...t, completed: !t.completed } : t
     );
     setTasks(updated);
   };
 
-  const deleteTask = (index) => {
-    setTasks(tasks.filter((_, i) => i !== index));
+  const deleteTask = (id) => {
+    setTasks(tasks.filter((t) => t.id !== id));
   };
 
   const filteredTasks =
@@ -57,15 +67,15 @@ export default function Tasks() {
         </div>
 
         <ul className="space-y-2">
-          {filteredTasks.map((task, i) => (
-            <li key={i} className="flex justify-between items-center bg-gray-100 dark:bg-gray-700 p-2 rounded">
+          {filteredTasks.map((task) => (
+            <li key={task.id} className="flex justify-between items-center bg-gray-100 dark:bg-gray-700 p-2 rounded">
               <span
-                className={`cursor-pointer ${task.completed ? "line-through" : ""}`}
-                onClick={() => toggleComplete(i)}
+                className={`cursor-pointer text-gray-900 dark:text-gray-100 ${task.completed ? "line-through" : ""}`}
+                onClick={() => toggleComplete(task.id)}
               >
                 {task.text}
               </span>
-              <Button variant="danger" onClick={() => deleteTask(i)}>
+              <Button variant="danger" onClick={() => deleteTask(task.id)}>
                 Delete
               </Button>
             </li>
